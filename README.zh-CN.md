@@ -57,7 +57,7 @@
 在新的因果位置：
 
 $$
-z_t=\operatorname{softmax}\left(
+z_t=\mathrm{softmax}\left(
 \frac{q_t[K_{<t};k_t]^\top}{\sqrt{d_k}}
 \right)[V_{<t};v_t].
 $$
@@ -72,9 +72,9 @@ $$
 B_{\mathrm{KV}}=2LH_{\mathrm{KV}}d_hTsN.
 $$
 
-其中 $L$ 为层数，$H_{\mathrm{KV}}$ 为 KV head 数，$d_h$ 为 head dimension，$T$ 为缓存长度，$s$ 为每元素字节数，$N$ 为 batch size；系数二对应 Key 与 Value。
+其中 $L$ 为层数， $H_{\mathrm{KV}}$ 为 KV head 数， $d_h$ 为 head dimension， $T$ 为缓存长度， $s$ 为每元素字节数， $N$ 为 batch size；系数二对应 Key 与 Value。
 
-当 $L=32$、$H_{\mathrm{KV}}=8$、$d_h=128$、$T=4096$、$s=2$、$N=1$ 时，结果为 **536,870,912 bytes = 512 MiB**。估算不包含模型权重、临时激活、分页/分配器开销及量化元数据；INT8 代表理想张量字节数。
+当 $L=32$、 $H_{\mathrm{KV}}=8$、 $d_h=128$、 $T=4096$、 $s=2$、 $N=1$ 时，结果为 **536,870,912 bytes = 512 MiB**。估算不包含模型权重、临时激活、分页/分配器开销及量化元数据；INT8 代表理想张量字节数。
 
 ## 本地运行
 

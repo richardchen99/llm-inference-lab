@@ -57,7 +57,7 @@ The model tests require cached and full-prefix outputs to agree within **1e-12**
 At a new causal position:
 
 $$
-z_t=\operatorname{softmax}\left(
+z_t=\mathrm{softmax}\left(
 \frac{q_t[K_{<t};k_t]^\top}{\sqrt{d_k}}
 \right)[V_{<t};v_t].
 $$
