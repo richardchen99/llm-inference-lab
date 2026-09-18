@@ -58,8 +58,8 @@
 
 $$
 z_t=\mathrm{softmax}\left(
-\frac{q_t[K_{<t};k_t]^\top}{\sqrt{d_k}}
-\right)[V_{<t};v_t].
+\frac{q_t[K_{1:t-1};k_t]^\top}{\sqrt{d_k}}
+\right)[V_{1:t-1};v_t].
 $$
 
 固定前缀、参数、位置规则与确定性前向计算时，因果 mask 保证新增未来 token 不改变历史位置的表示，因此可以逐层复用 K/V。**新 Query 仍需读取不断增长的历史**；缓存不会使 attention 成本成为常数。

@@ -58,8 +58,8 @@ At a new causal position:
 
 $$
 z_t=\mathrm{softmax}\left(
-\frac{q_t[K_{<t};k_t]^\top}{\sqrt{d_k}}
-\right)[V_{<t};v_t].
+\frac{q_t[K_{1:t-1};k_t]^\top}{\sqrt{d_k}}
+\right)[V_{1:t-1};v_t].
 $$
 
 With a fixed prefix, parameters, position rules, and deterministic forward pass, causal masking leaves historical states unchanged when future tokens are appended. The argument applies layer by layer. **The new Query still reads a growing history**; caching does not make attention cost constant.
