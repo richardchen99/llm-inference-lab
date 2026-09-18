@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+<title id="title">Reuse follows causality</title><desc id="desc">Two independent paths compute the same last-position hidden state.</desc>
+<defs>
+<linearGradient id="paper" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FCFAF5"/><stop offset="1" stop-color="#F2F7FA"/></linearGradient>
+<marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 1 L 9 5 L 0 9 Z" fill="#586B77"/></marker>
+<style>text{font-family:"Avenir Next","Trebuchet MS",sans-serif;fill:#22313D}.display{font-family:Charter,Georgia,serif;font-weight:700}.small{letter-spacing:2px;font-weight:600}</style>
+</defs>
+<rect width="1600" height="1120" rx="24" fill="url(#paper)"/>
+<text x="64" y="58" font-size="19" style="fill:#AA8244" class="small">MECHANISM ATLAS  /  03</text>
+<text x="64" y="121" font-size="45" style="fill:#22313D" class="display">Reuse follows causality</text>
+<text x="64" y="165" font-size="23" style="fill:#586B77" class="">Two independent paths compute the same last-position hidden state.</text>
+<rect x="64" y="209" width="1472" height="108" rx="18" fill="#FFFFFF" stroke="#CBD6DB" stroke-width="1.5"/>
+<text x="88" y="252" font-size="27" style="fill:#22313D" class="" font-weight="600">One fixed input stream</text>
+<text x="88" y="290" font-size="23" style="fill:#586B77" class="">Prompt prefix + a prescribed continuation  ·  Deterministic parameters and positions</text>
+<path d="M 410 317 L 410 367" fill="none" stroke="#586B77" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 1190 317 L 1190 367" fill="none" stroke="#586B77" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="64" y="362" font-size="19" style="fill:#AA8244" class="small">A  /  FULL PREFIX</text>
+<text x="850" y="362" font-size="19" style="fill:#4E7E9D" class="small">B  /  CACHED DECODING</text>
+<rect x="64" y="381" width="686" height="354" rx="18" fill="#F5F0E5" stroke="#CBD6DB" stroke-width="1.5"/>
+<rect x="94" y="410" width="626" height="112" rx="18" fill="#FFFFFF" stroke="#CBD6DB" stroke-width="1.5"/>
+<text x="118" y="453" font-size="27" style="fill:#22313D" class="" font-weight="600">Layer 1 → Layer 2</text>
+<text x="118" y="491" font-size="23" style="fill:#586B77" class="">Recompute all prefix positions</text>
+<path d="M 407 522 L 407 572" fill="none" stroke="#586B77" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="94" y="581" width="626" height="115" rx="18" fill="#FFFFFF" stroke="#CBD6DB" stroke-width="1.5"/>
+<text x="118" y="624" font-size="26" style="fill:#22313D" class="" font-weight="600">Last-position hidden state</text>
+<text x="118" y="662" font-size="23" style="fill:#586B77" class="">Reference result from full recomputation</text>
+<rect x="850" y="381" width="686" height="354" rx="18" fill="#EDF4F8" stroke="#CBD6DB" stroke-width="1.5"/>
+<rect x="880" y="410" width="398" height="112" rx="18" fill="#FFFFFF" stroke="#CBD6DB" stroke-width="1.5"/>
+<text x="904" y="453" font-size="25" style="fill:#22313D" class="" font-weight="600">New token · Layer 1</text>
+<text x="904" y="491" font-size="23" style="fill:#586B77" class="">Project → append → read</text>
+<rect x="1300" y="410" width="206" height="112" rx="18" fill="#F5F0E5" stroke="#CBD6DB" stroke-width="1.5"/>
+<text x="1324" y="453" font-size="25" style="fill:#22313D" class="" font-weight="600">L1 cache</text>
+<text x="1324" y="491" font-size="23" style="fill:#586B77" class="">Past K / V</text>
+<path d="M 1300 474 L 1281 474" fill="none" stroke="#586B77" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 1079 522 L 1079 571" fill="none" stroke="#586B77" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="880" y="581" width="398" height="115" rx="18" fill="#FFFFFF" stroke="#CBD6DB" stroke-width="1.5"/>
+<text x="904" y="624" font-size="25" style="fill:#22313D" class="" font-weight="600">New token · Layer 2</text>
+<text x="904" y="662" font-size="23" style="fill:#586B77" class="">Use Layer 1 output</text>
+<rect x="1300" y="581" width="206" height="115" rx="18" fill="#F5F0E5" stroke="#CBD6DB" stroke-width="1.5"/>
+<text x="1324" y="624" font-size="25" style="fill:#22313D" class="" font-weight="600">L2 cache</text>
+<text x="1324" y="662" font-size="23" style="fill:#586B77" class="">Past K / V</text>
+<path d="M 1300 643 L 1281 643" fill="none" stroke="#586B77" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 407 735 L 407 781 L 590 781 L 590 818" fill="none" stroke="#586B77" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M 1193 735 L 1193 781 L 1010 781 L 1010 818" fill="none" stroke="#586B77" stroke-width="2.3" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="378" y="827" width="844" height="113" rx="18" fill="#EDF5F0" stroke="#CBD6DB" stroke-width="1.5"/>
+<text x="402" y="870" font-size="29" style="fill:#22313D" class="" font-weight="600">Numerical witness</text>
+<text x="402" y="908" font-size="23" style="fill:#586B77" class="">Compare the two outputs after every completed token</text>
+<text x="64" y="985" font-size="24" style="fill:#4E7E9D" class="" font-weight="600">2 layers  ·  4 dimensions  ·  1 head</text>
+<text x="1536" y="985" font-size="24" style="fill:#586B77" class="" text-anchor="end">New queries still read the growing history.</text>
+<path d="M 64 1048 L 1536 1048" stroke="#CBD6DB" stroke-width="1.5" fill="none"/>
+<text x="64" y="1083" font-size="18" style="fill:#586B77" class="">KV memory budgeting and model-family masks are separate companion experiments.</text>
+<text x="1536" y="1083" font-size="18" style="fill:#586B77" class="" text-anchor="end">Richard Chen  ·  Interactive AI Research Labs</text>
+</svg>

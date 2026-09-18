@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this lab in teaching or writing, please cite the software and record the commit used."
+type: software
+title: "LLM Inference Lab"
+abstract: "An interactive educational lab for KV cache equivalence, attention masks, and cache memory accounting."
+authors:
+  - family-names: Chen
+    given-names: Richard
+    affiliation: "Renmin University of China"
+    website: "https://richardchen99.github.io"
+repository-code: "https://github.com/richardchen99/llm-inference-lab"
+url: "https://richardchen99.github.io/llm-inference-lab/"
+keywords:
+  - KV cache
+  - language model inference
+  - attention
+  - interactive visualization

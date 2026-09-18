@@ -1,29 +1,60 @@
 # LLM Inference Lab
 
-An interactive research lab by **Richard Chen · 中国人民大学 / Renmin University of China**.
+**Understand what a language model can reuse—and why.**
 
-[Live lab](https://richardchen99.github.io/llm-inference-lab/) · [Personal research](https://richardchen99.github.io)
+Follow KV caching layer by layer, compare cached decoding with full-prefix recomputation, and connect the result to attention masks and model families. A small deterministic network makes the equivalence directly inspectable.
 
-把 **KV Cache** 与 **模型家族** 放在同一实验室：缓存能否复用，取决于模型允许哪些信息流动。
+[**Open the lab ↗**](https://richardchen99.github.io/llm-inference-lab/) · [Research note · 中文](https://richardchen99.github.io/blog/llm-inference-lab-note/) · [中文 README](README.zh-CN.md) · [Quick start](#quick-start)
 
-## Experiments
+Created by **Richard Chen · Renmin University of China / 中国人民大学** · [Homepage](https://richardchen99.github.io)
 
-- **Cache workbench**：prefill 后逐 token、逐 layer 执行 Q/K/V 投影 → K/V 追加 → 历史读取 → 残差 / FFN；缓存格、注意力权重与最终隐藏状态按阶段同步出现。
-- **Numerical witness**：两条独立路径分别做完整前缀重算与增量缓存，比较最后一个位置的真实数值误差。
-- **Memory budget**：调节上下文长度、KV heads、batch size、dtype，观察缓存内存与 GQA / MQA 的影响。
-- **Model family atlas**：切换 Encoder-only / Decoder-only / Encoder–Decoder，点击 Query token 查看 mask 和信息路径；第三类额外显示目标到源的 cross-attention。
+[![Inference workbench with per-layer KV cache, execution stages, and a numerical equivalence check](docs/assets/overview.jpg)](https://richardchen99.github.io/llm-inference-lab/)
 
-提供句子 `The cat sat → on the mat .` 与代码 `def square(x): → return x * x` 两个固定续写示例。固定词序用于检查计算一致性，未调用模型采样生成。
+*Real application capture after the first continuation token completes both layers: the cache and full-prefix paths agree at display precision.*
 
-## Try this
+## Four connected experiments
 
-1. 单步执行 prefill，观察两层的前缀 K/V。
-2. 新 token 首先进入 Layer 1；Append K/V 后，只新增该层的一格。
-3. Read history 时该层缓存高亮，显示新 Query 对历史位置的权重。
-4. Layer 1 完成后，Layer 2 使用它的输出继续计算。两层结束才显示最终隐藏状态及缓存 / 重算误差。
-5. 改看 Encoder-only，注意新增输入可能改变历史隐藏状态；对比 Encoder–Decoder 的固定源端 KV 与不断增长的目标端 self-attention KV。
+| Workbench | Intervention | Evidence |
+| --- | --- | --- |
+| **Cache execution** | Step through Q/K/V, append, history read, and residual/FFN | Each layer updates only when its input becomes available |
+| **Numerical equivalence** | Compare independent cached and full-prefix paths | Inspect the final hidden-state difference |
+| **Memory budget** | Change context length, KV heads, dtype, and batch | See how cache tensor storage scales |
+| **Model family atlas** | Select Encoder-only, Decoder-only, or Encoder–Decoder | Inspect allowed attention paths and which states can remain fixed |
+
+Sentence and code examples use prescribed continuations: `The cat sat → on the mat .` and `def square(x): → return x * x`. They provide repeatable inputs for checking computation. The interface uses English controls and Chinese explanations.
+
+## From information flow to reuse
+
+![Framework connecting causal attention, layerwise KV reuse, full-prefix verification, and memory accounting](docs/assets/architecture.png)
+
+*Original schematic: causal structure explains reuse; an independent forward path checks it. [Editable SVG](docs/assets/architecture.svg) · [Figure provenance](docs/assets/README.md).*
+
+## Follow one new token
+
+1. Select the sentence example and step through **prefill**. Both layers receive the prefix K/V.
+2. Continue with `on`. In Layer 1, **Append K/V** adds the new position to that layer alone.
+3. At **Read history**, inspect how the new Query attends to previous keys and the current key.
+4. Complete Layer 1, then Layer 2. The final hidden state and the cached/full-prefix error appear only after both layers finish.
+5. Open the family atlas. A bidirectional encoder may change historical states after an append; a causal decoder preserves them. In encoder–decoder models, fixed-source cross-attention K/V differs from growing target self-attention K/V.
+
+The model tests require cached and full-prefix outputs to agree within **1e-12**. A zero shown in the interface reflects display precision, not a claim about every production implementation.
+
+<details>
+<summary><strong>Inspect memory scaling and model families</strong></summary>
+
+![KV memory panel with 32 layers, 8 KV heads, head dimension 128, context 4096, BF16, and batch 1](docs/assets/memory.jpg)
+
+*This configuration uses 512 MiB for K/V tensors alone.*
+
+![Encoder-decoder information flow with a target Query reading the fixed source through cross-attention](docs/assets/families.jpg)
+
+*The family atlas separates source-side cross-attention from target-side causal self-attention.*
+
+</details>
 
 ## Mathematical scope
+
+At a new causal position:
 
 $$
 z_t=\operatorname{softmax}\left(
@@ -31,52 +62,68 @@ z_t=\operatorname{softmax}\left(
 \right)[V_{<t};v_t].
 $$
 
-固定前缀、参数、位置规则及确定性前向计算下，因果 mask 保证新增未来 token 不改变旧位置的表示；逐层递推即可复用每层 K/V。新 Query 仍需读取历史缓存，解码成本不是常数。
+With a fixed prefix, parameters, position rules, and deterministic forward pass, causal masking leaves historical states unchanged when future tokens are appended. The argument applies layer by layer. **The new Query still reads a growing history**; caching does not make attention cost constant.
 
-演示模型使用 **2 layers、4 dimensions、1 attention head**，含确定性 token / 位置表示、线性 Q/K/V 投影、因果 attention、残差和逐位置非线性变换。它是验证缓存机制的小网络，没有训练权重、LayerNorm 或 LM head，不等同于完整生产 Transformer。
+The demonstrator has **2 layers, 4 dimensions, and 1 attention head**, with fixed token/position representations, Q/K/V projections, causal attention, residuals, and a per-position nonlinear FFN. It has no trained weights, LayerNorm, or LM head. Continuations are prescribed rather than sampled from a language model.
 
-内存面板独立采用 **32 layers、head dimension 128**：
+The separate memory panel uses 32 layers and head dimension 128:
 
 $$
-B_{\mathrm{KV}}=2LH_{\mathrm{KV}}d_hTbN.
+B_{\mathrm{KV}}=2LH_{\mathrm{KV}}d_hTsN.
 $$
 
-单位为 bytes，展示时换算 MiB / GiB。估算不含权重、临时激活、分页 / 分配器与量化元数据开销。INT8 选项表示理想张量字节数。
+Here, $L$ is layer count, $H_{\mathrm{KV}}$ KV heads, $d_h$ head dimension, $T$ cached length, $s$ bytes per element, and $N$ batch size. The factor two accounts for Keys and Values.
 
-## Run locally
+For $L=32$, $H_{\mathrm{KV}}=8$, $d_h=128$, $T=4096$, $s=2$, and $N=1$, the result is **536,870,912 bytes = 512 MiB**. Weights, temporary activations, paging/allocator overhead, and quantization metadata are excluded. INT8 represents ideal tensor storage.
 
-Use Node.js **24** (supported minimum: 22.12).
+## Quick start
+
+Use **Node.js 24**; the supported minimum is 22.12.
 
 ```bash
+git clone https://github.com/richardchen99/llm-inference-lab.git
+cd llm-inference-lab
 npm ci
 npm run dev -- --host 127.0.0.1
+```
+
+```bash
 npm test
 npm run build
 npm run preview -- --host 127.0.0.1
 ```
 
-## Implementation
+All experiment calculations run in the browser; no inference service, API key, or GPU is required. Built with React 19, TypeScript, Vite, Framer Motion, and KaTeX.
 
-- `src/model.ts`：完整前向、增量前向、逐步轨迹、attention mask、内存计算。
-- `src/App.tsx`：逐层 / 逐阶段状态机、cache lanes、mask atlas 与参数控件。
-- `src/shared.tsx` / `src/style.css`：KaTeX、Framer Motion、浅色玻璃 UI、键盘操作与 reduced-motion 支持。
-- `tests/model.test.mjs`：缓存与完整前向相等、因果历史不变及双向反例、内存单位、三类 attention mask。
+## Implementation and verification
 
-所有计算在浏览器本地完成，无外部推理服务、密钥或 GPU 要求。`npm test` 编译计算模型并运行 Node test runner；`npm run build` 做类型检查与静态构建。
+| Entry point | Responsibility |
+| --- | --- |
+| [`src/model.ts`](src/model.ts) | Full and incremental forward passes, execution traces, masks, and memory accounting |
+| [`src/App.tsx`](src/App.tsx) | Layer/stage state machine, cache lanes, family atlas, and controls |
+| [`src/shared.tsx`](src/shared.tsx) · [`src/style.css`](src/style.css) | Formulas, animation, glass panels, and reduced-motion support |
+| [`tests/model.test.mjs`](tests/model.test.mjs) | Forward equivalence, causal-history invariance, a bidirectional counterexample, bytes, and masks |
 
-GitHub Actions 在 `main` 推送后以 Node 24 测试、构建和部署 GitHub Pages。首次部署需设置 Pages source 为 GitHub Actions。
+`npm test` compiles the model and runs the Node test runner. The [Pages workflow](.github/workflows/deploy.yml) tests, type-checks, builds, and deploys `main` using Node 24. For a fork, select **GitHub Actions** as the Pages source.
 
-## Research series
+## Reading and citation
 
-[Transformer Architecture Lab](https://richardchen99.github.io/transformer-architecture-lab/) ·
-[Position Encoding Lab](https://richardchen99.github.io/position-encoding-lab/) ·
-[Tokenizer Playground](https://richardchen99.github.io/tokenizer-playground/) ·
-[LLM RL Lab](https://richardchen99.github.io/llm-rl-lab/)
+- Vaswani et al. [*Attention Is All You Need*](https://arxiv.org/abs/1706.03762), 2017 — attention and encoder–decoder structure.
+- Hugging Face. [*Cache strategies*](https://huggingface.co/docs/transformers/kv_cache) — practical cache implementations and tradeoffs.
+- Ainslie et al. [*GQA*](https://arxiv.org/abs/2305.13245), 2023 — grouped-query attention.
+- [BERT](https://arxiv.org/abs/1810.04805) and [T5](https://arxiv.org/abs/1910.10683) — context for the model-family comparison.
+- [Project research note](https://richardchen99.github.io/blog/llm-inference-lab-note/) — the experiment explained in Chinese.
 
-## Sources
+For teaching or writing, link to this repository and record the commit used. [CITATION.cff](CITATION.cff) provides machine-readable software attribution.
 
-- [Attention Is All You Need](https://arxiv.org/abs/1706.03762)
-- [Hugging Face: Cache strategies](https://huggingface.co/docs/transformers/kv_cache)
-- [GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints](https://arxiv.org/abs/2305.13245)
-- [BERT](https://arxiv.org/abs/1810.04805)
-- [T5](https://arxiv.org/abs/1910.10683)
+## Explore the series
+
+| Lab | Central question |
+| --- | --- |
+| [Tokenizer Playground](https://github.com/richardchen99/tokenizer-playground) | How does a corpus become a reusable vocabulary? |
+| [Transformer Architecture Lab](https://github.com/richardchen99/transformer-architecture-lab) | How does attention turn token representations into context? |
+| [Position Encoding Lab](https://github.com/richardchen99/position-encoding-lab) | How does position change attention geometry? |
+| **LLM Inference Lab** | When can past computation be reused? |
+| [LLM RL Lab](https://github.com/richardchen99/llm-rl-lab) | How does reward change a response distribution? |
+
+Found it useful? A star helps others discover the series. Reproducible cache experiments and improvements to the numerical checks are welcome.
